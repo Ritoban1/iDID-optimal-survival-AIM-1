@@ -1,0 +1,15 @@
+Package: ididPolicy
+Type: Package
+Title: Instrumented Difference-in-Differences Policy Estimation
+Version: 0.1.0
+Author: iDID study authors
+Maintainer: Ritoban Kundu <ritoban.kundu@pennmedicine.upenn.edu>
+Description: Cross-fitted scoring, constrained linear policy learning, and
+    value contrast estimation for recurrent events with a terminal event.
+    Implements two inverse probability weighting estimators and the two-part
+    augmented estimator. Supports user-specified landmarks and nuisance libraries.
+License: file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.1)
+Imports: stats, SuperLearner, survival
+Suggests: randomForestSRC, lightgbm, rgenoud

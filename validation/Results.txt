@@ -1,0 +1,11 @@
+Two-part simulation equivalence, replication 1 at each sample size
+
+n       landmarks    comparisons     maximum absolute difference
+1000    1, 4         84              1.9428903e-15
+1500    1, 4         84              2.7755576e-15
+
+Count and survival scores, rule coefficients, decisions, PCD, and optimal
+coverage indicators matched exactly. Value estimates, standard errors,
+and confidence limits agreed to floating-point rounding.
+
+R CMD check --no-manual --no-build-vignettes: Status OK.
