@@ -1,7 +1,7 @@
 \name{idid_fit_scores}
 \alias{idid_fit_scores}
 \title{Compute Cross-Fitted Scores at User-Specified Landmarks}
-\description{Fit the nuisance functions by cross-fitting and compute count and survival scores for IPW1, IPW2, and two-part AIPW.}
+\description{Fit the nuisance functions by cross-fitting and compute count and survival scores for IPW1, IPW2, and AIPW.}
 \usage{
 idid_fit_scores(data, events, times, tau, covariates,
   methods = c("IPW1", "IPW2", "AIPW"),

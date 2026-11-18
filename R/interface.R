@@ -3,7 +3,7 @@ whole_number <- function(x, min, max) {
     x >= min && x <= max && x == floor(x)
 }
 
-idid_control <- function(profile = c("default", "paper"), sl_library = NULL,
+idid_control <- function(profile = c("default", "lightgbm"), sl_library = NULL,
                          outer_folds = 5L, inner_folds = 3L,
                          rf_trees = 500L, rf_nodesize = 15L, threads = 1L,
                          lgb_rounds = 200L, b_points = 21L,
@@ -11,9 +11,11 @@ idid_control <- function(profile = c("default", "paper"), sl_library = NULL,
                          first_stage_sign = 1L, b_extra_times = numeric(),
                          theta_bound = 3, genoud_population = 2000L,
                          genoud_generations = 40L, genoud_wait = 6L) {
-  profile <- match.arg(profile)
+  profile <- if (missing(profile)) "default" else
+    match.arg(profile, c("default", "lightgbm", "paper"))
+  if (profile == "paper") profile <- "lightgbm"
   if (is.null(sl_library)) {
-    library <- if (profile == "paper") c("SL.mean", "SL.idid_lgb2", "SL.idid_lgb4")
+    library <- if (profile == "lightgbm") c("SL.mean", "SL.idid_lgb2", "SL.idid_lgb4")
                else c("SL.mean", "SL.idid_cell_glm")
     sl_library <- list(binomial = library, gaussian = library)
   } else if (is.character(sl_library)) {
@@ -90,7 +92,7 @@ idid_fit_scores <- function(data, events, times, tau, covariates,
                             verbose = FALSE) {
   if (!inherits(control, "idid_control")) stop("Use idid_control() to create control.")
   cfg <- control
-  default_survival <- if (cfg$profile == "paper") "randomForestSRC" else "cox"
+  default_survival <- if (cfg$profile %in% c("lightgbm", "paper")) "randomForestSRC" else "cox"
   cfg$censor <- match.arg(if (is.null(censor)) default_survival else censor,
                           c("cox", "randomForestSRC"))
   cfg$death <- match.arg(if (is.null(death)) default_survival else death,
@@ -166,7 +168,7 @@ idid_fit_scores <- function(data, events, times, tau, covariates,
   }
   sim <- list(data = d, events = events, obs_N = counts, landmark_times = times,
               b_times = sort(unique(c(times, cfg$b_extra_times))))
-  # Preserve the caller's random-number state while keeping the paper's seed schedule.
+  # Preserve the caller's random-number state across nuisance fits.
   rng <- if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
     get(".Random.seed", envir = .GlobalEnv) else NULL
   on.exit(restore_rng(rng))

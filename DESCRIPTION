@@ -6,8 +6,8 @@ Author: iDID study authors
 Maintainer: Ritoban Kundu <ritoban.kundu@pennmedicine.upenn.edu>
 Description: Cross-fitted scoring, constrained linear policy learning, and
     value contrast estimation for recurrent events with a terminal event.
-    Implements two inverse probability weighting estimators and the two-part
-    augmented estimator. Supports user-specified landmarks and nuisance libraries.
+    Implements two inverse probability weighting estimators and an
+    augmented inverse probability weighting estimator. Supports user-specified landmarks and nuisance libraries.
 License: file LICENSE
 Encoding: UTF-8
 Depends: R (>= 4.1)

@@ -1,8 +1,4 @@
-# Complete proposed DGP for the user's iDID policy method.
-# Requires base R only. Does not modify or source any original simulation file.
-# The response-group construction and its restrictions are documented in
-# valid_idid_dgp_assumptions.txt. It is a change to the original outcome DGP.
-
+# Generate synthetic recurrent-event histories with an instrumented DID design.
 simulate_valid_idid <- function(n = 2500L, seed = NULL,
                                 return_potentials = FALSE) {
   stopifnot(length(n) == 1L, is.finite(n), n >= 1, n == as.integer(n),
@@ -99,84 +95,4 @@ simulate_valid_idid <- function(n = 2500L, seed = NULL,
     }
   }
   answer
-}
-
-# Exact CATEs for DEATH-STOPPED counts and survival, conditional on W=(V1,V2).
-# This function integrates out the response group and all unmeasured variables.
-idid_true_cate <- function(V1, V2, t) {
-  stopifnot(length(t) == 1L, is.finite(t), t >= 0, t <= 10,
-            length(V1) > 0L, length(V2) > 0L,
-            length(V1) == length(V2) || length(V1) == 1L || length(V2) == 1L,
-            all(is.finite(V1)), all(is.finite(V2)),
-            all(abs(V1) <= 2), all(abs(V2) <= 2))
-  n <- max(length(V1), length(V2))
-  V1 <- rep_len(V1, n)
-  V2 <- rep_len(V2, n)
-  beta <- .8*tanh(4*(V1-V2-.5))
-  rate0 <- .2 - .01*V1 + .02*V2
-  rate1 <- rate0 + .2125*beta
-  times <- (1:5)[(1:5) <= t]
-  effect_N <- numeric(n)
-  if (length(times)) {
-    mu0 <- outer(rep(1, n), diff(c(0, 1:5)^1.1)[times] + .1*times) +
-      .05*V1 + .03*V2
-    effect_N <- rowSums(exp(-outer(rate1, times))*(mu0 + beta) -
-                         exp(-outer(rate0, times))*mu0)
-  }
-  data.frame(tau_N = .8*effect_N,
-             tau_Y = .8*(exp(-rate1*t) - exp(-rate0*t)))
-}
-
-# Population contrasts by deterministic quadrature over the true truncated-N W.
-# A NULL reference_theta denotes the fixed reference rule d_ref(W)=0.
-# Both supplied theta vectors use d(W)=I(theta0+theta1*V1+theta2*V2 > 0).
-idid_true_policy_contrast <- function(theta = c(.5,-1,1),
-                                      reference_theta = NULL, t = 1,
-                                      rel.tol = 1e-8) {
-  stopifnot(length(theta) == 3L, all(is.finite(theta)),
-            is.null(reference_theta) ||
-              (length(reference_theta) == 3L && all(is.finite(reference_theta))),
-            length(t) == 1L, is.finite(t), t >= 1, t <= 10,
-            is.finite(rel.tol), rel.tol > 0)
-  policies <- list(theta)
-  if (!is.null(reference_theta)) policies <- c(policies, list(reference_theta))
-  mass <- pnorm(2)-pnorm(-2)
-  inside <- function(x) x[is.finite(x) & x > -2 & x < 2]
-  outer_breaks <- c(-2,2)
-  for (th in policies) if (th[2] != 0) {
-    outer_breaks <- c(outer_breaks, inside(-(th[1]+th[3]*c(-2,2))/th[2]))
-  }
-  outer_breaks <- sort(unique(outer_breaks))
-  solve_component <- function(component) {
-    at_V1 <- function(w1) {
-      inner_breaks <- c(-2,2)
-      for (th in policies) if (th[3] != 0) {
-        inner_breaks <- c(inner_breaks, inside(-(th[1]+th[2]*w1)/th[3]))
-      }
-      inner_breaks <- sort(unique(inner_breaks))
-      ans <- 0
-      for (j in seq_len(length(inner_breaks)-1L)) {
-        lower <- inner_breaks[j]
-        upper <- inner_breaks[j+1L]
-        mid <- (lower+upper)/2
-        d <- as.integer(theta[1]+theta[2]*w1+theta[3]*mid > 0)
-        ref <- if (is.null(reference_theta)) 0L else {
-          as.integer(reference_theta[1]+reference_theta[2]*w1+reference_theta[3]*mid > 0)
-        }
-        if (d != ref) {
-          ans <- ans + (d-ref)*integrate(function(w2) {
-            idid_true_cate(w1,w2,t)[[component]]*dnorm(w2)/mass
-          },lower,upper,rel.tol=rel.tol,abs.tol=1e-11)$value
-        }
-      }
-      ans*dnorm(w1)/mass
-    }
-    sum(vapply(seq_len(length(outer_breaks)-1L), function(j) {
-      integrate(function(w1) vapply(w1,at_V1,numeric(1)),
-                outer_breaks[j],outer_breaks[j+1L],
-                rel.tol=rel.tol,abs.tol=1e-10)$value
-    },numeric(1)))
-  }
-  c(value_contrast = solve_component('tau_N'),
-    survival_contrast = solve_component('tau_Y'))
 }

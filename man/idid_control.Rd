@@ -3,7 +3,7 @@
 \title{Configure iDID Nuisance Fitting and Policy Search}
 \description{Select SuperLearner libraries and tune cross-fitting, the survival forest, and policy search.}
 \usage{
-idid_control(profile = c("default", "paper"), sl_library = NULL,
+idid_control(profile = c("default", "lightgbm"), sl_library = NULL,
   outer_folds = 5L, inner_folds = 3L, rf_trees = 500L,
   rf_nodesize = 15L, threads = 1L, lgb_rounds = 200L,
   b_points = 21L, prob_floor = .01, delta_floor = .05,
@@ -13,7 +13,8 @@ idid_control(profile = c("default", "paper"), sl_library = NULL,
 }
 \arguments{
 \item{profile}{Default uses a mean learner and a GLM with a period-by-instrument term, and defaults to Cox survival.
-Paper uses mean and two LightGBM learners and defaults to randomForestSRC.}
+The \code{"lightgbm"} profile uses a mean learner and two LightGBM learners
+and defaults to randomForestSRC.}
 \item{sl_library}{A character vector of SuperLearner wrapper names, or a named
 list with separate character vectors for \code{binomial} and \code{gaussian}.
 The latter library must support continuous weighted outcomes.}
